@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#include <dict.h>
 
 #define MAX_SIZE 1013
 #define ALPHABET_SIZE 100
@@ -67,17 +68,29 @@ void print_dict(dict *d) {
 }
 
 
-// insert item into dict
+// insert item into dict with linear probing
 int insert_dict(dict* d, kvp *item) {
-  // TODO implement insertion with collission handling 
+    // check if element already in dict
+    if (look_up_dict(d, item) != NULL) {
+  	printf("item already in dict\n");
+    return -1;
+    }
+  
+    // insert item
     int hash = hash_function(item->key);
     printf("hash: %d\n", hash);
-    int i = hash;
-    int j = 0;
-    while (d->data[i] != NULL) {
-	i = (hash + j) % MAX_SIZE;
-	j++;
+    int number_of_trials = 0;  // keep track when to abbort insertion
+    int i = hash; // index to insert item at
+
+    while (d->data[i] != NULL && number_of_trials < MAX_SIZE) {
 	printf("collision\n");
+	i = (i + 1) % MAX_SIZE;
+	number_of_trials++;
+    }
+
+    if (number_of_trials == MAX_SIZE) {
+      	printf("dict full\n");
+	return -1;
     }
     d->data[i] = item;
     printf("inserted @ %d\n", i);
@@ -86,7 +99,7 @@ int insert_dict(dict* d, kvp *item) {
 } 
 
 
-// retrieve item from dict
+// retrieve item from dict in a linear probing fashion
 kvp *look_up_dict(dict *d, kvp *item){
   int hash = hash_function(item->key);
   int i = hash;
@@ -121,9 +134,11 @@ int main() {
     item_2->value_length = 6;
 
     insert_dict(d, item);
+    insert_dict(d, item);
     insert_dict(d, item_2);
     print_dict(d);
     look_up_dict(d, item);
 
     return 0;
 }
+// TODO delete items from dict and recalculate hash values and reinsert items
