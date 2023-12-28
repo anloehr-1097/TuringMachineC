@@ -24,6 +24,9 @@
 #define TRUE 1
 #define FALSE 0
 #define MAX_STATES 100
+#define VISUALIZE_TAPE 0 
+#define VISUALIZE_STATES 1 
+#define DEBUG 0 
 
 
 typedef struct t_state {
@@ -46,6 +49,15 @@ state *create_state(int idx, int is_accepting, int is_rejecting, char *desc){
 
 }
 
+void visualize_states(state** states) {
+    // print states
+    int i = 0;
+    printf("index\tdesc\t\accepting\trejecting\t\n");
+    while (states[i] != NULL){
+	printf("%d\t%s\t%d\t%d\n", states[i]->idx, states[i]->desc, states[i]->is_accepting, states[i]->is_rejecting);
+	i ++;
+    }
+}
 
 void free_state(state *s){
 	free(s);
@@ -156,6 +168,7 @@ void visualize_tape(turing_machine *tm) {
 
 
 void parse_input(char *line, turing_machine *tm) {
+    // TODO add new input characters to alphabet
     char *first_token = line + strlen("input: "); 
     char tokens[strlen(line)] ;
 
@@ -180,9 +193,11 @@ void parse_input(char *line, turing_machine *tm) {
 	first_token += len;
 	strcpy(tokens, first_token);
 
+	#if DEBUG
 	printf("Substring = %s\n", substring);
 	printf("Tokens = %s\n", tokens);
 	printf("Len = %d\n", len);
+	#endif
 	len = cut_substring(tokens, ",");
 	idx++;
 
@@ -192,27 +207,70 @@ void parse_input(char *line, turing_machine *tm) {
     current_symb = create_symbol(idx, tokens);
     n = create_node(current_symb); 
     add_node(&tm->tape, n);
+    #if VISUALIZE_TAPE 
     visualize_tape(tm);
+    #endif
 }
 
 
 void parse_init(char *line, turing_machine *tm, state *states[MAX_STATES]) {
     char *first_token = line + strlen("init: "); 
-    char tokens[strlen(line)] ;
-    fputs(tokens, stdout);
+    first_token[2] = '\0';
+    char *tokens = (char *) malloc(strlen(line) * sizeof(char));
     strcpy(tokens, first_token);
-    printf("Tokens: %s\n", tokens);
-    printf("parsing init");
-  
+    // tokens contains one valid state which is the init state
+    // init state is first state ever added to states
+    // remove newline char
+
+    
+    
+    state *init_state = create_state(0, 0, 0, tokens);
+    states[0] = init_state;
+    tm ->s = *init_state;
 }
 
 
-
-
-
 void parse_accept(char *line, turing_machine *tm, state *states[MAX_STATES]) {
-  char *tokens = line + strlen("accept: "); 
-  fputs(tokens, stdout);
+    char *first_token = line + strlen("accept: "); 
+    char *tokens = (char *) malloc(strlen(line) * sizeof(char));
+    strcpy(tokens, first_token);
+
+    // accept states starting from index 1
+    int idx = 1; 
+
+    char substring[MAX_LINE_LENGTH] = "";
+    // split substring based on ','
+    int len = cut_substring(tokens, ",");
+    state *s;
+  
+    while (len > -1){
+	strlcpy(substring, tokens, len);
+	// create new letter
+
+	s = create_state(idx, 1, 0, strdup(substring));
+	states[idx] = s;
+
+	// modify token sequence to be further parsed 
+	first_token += len;
+	strcpy(tokens, first_token);
+
+	#if DEBUG
+	printf("Substring = %s\n", substring);
+	printf("Tokens = %s\n", tokens);
+	printf("Len = %d\n", len);
+	#endif
+	len = cut_substring(tokens, ",");
+	idx++;
+
+    }
+
+    // last letter remaining in tokens, need to parse, remove newline
+    tokens[strlen("qAccept")] = '\0';
+    s = create_state(idx, 1, 0, tokens);
+    states[idx] = s;
+    #if VISUALIZE_STATES
+    visualize_states(states);
+    #endif
 }
 
 
@@ -268,7 +326,6 @@ void parse_file(FILE *fp, turing_machine *tm, state *states[MAX_STATES]){
     // read lines
     while((fgets(line, MAX_LINE_LENGTH, fp)) != NULL){
       parse_line(line, tm, states);
-      printf("Parsed line successfully\n");
     };
    
 }
@@ -278,6 +335,7 @@ int main(int argc, char *argv[]){
   FILE *file = read_file("input.txtt");
   turing_machine *tm = malloc(sizeof(turing_machine));
   state *states[MAX_STATES] = {0};
+
 
   parse_file(file, tm, states);
   //parse_input("input: 1,0,1,0,1,0,1,0,1,0,1,0,1,0", tm);
