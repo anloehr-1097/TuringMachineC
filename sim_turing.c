@@ -246,7 +246,7 @@ void parse_accept(char *line, turing_machine *tm, state *states[MAX_STATES]) {
     while (len > -1){
 	strlcpy(substring, tokens, len);
 	// create new letter
-
+	
 	s = create_state(idx, 1, 0, strdup(substring));
 	states[idx] = s;
 
@@ -276,8 +276,6 @@ void parse_accept(char *line, turing_machine *tm, state *states[MAX_STATES]) {
 
 void parse_line(char *line, turing_machine *tm, state *states[MAX_STATES]){
     // parse line and add info to turing machine
-    char token;
-    int len = strlen(line);
     fputs(line, stdout);
 
     // substrings to probe for 
@@ -322,7 +320,6 @@ void parse_line(char *line, turing_machine *tm, state *states[MAX_STATES]){
 void parse_file(FILE *fp, turing_machine *tm, state *states[MAX_STATES]){
     // parse file and create turing machine
     char line[MAX_LINE_LENGTH] = {0};
-    size_t len = 0;
     // read lines
     while((fgets(line, MAX_LINE_LENGTH, fp)) != NULL){
       parse_line(line, tm, states);
