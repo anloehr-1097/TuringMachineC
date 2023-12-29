@@ -27,6 +27,7 @@
 #define VISUALIZE_TAPE 0 
 #define VISUALIZE_STATES 1 
 #define DEBUG 0 
+int num_states = 0;
 
 
 typedef struct t_state {
@@ -222,8 +223,6 @@ void parse_init(char *line, turing_machine *tm, state *states[MAX_STATES]) {
     // init state is first state ever added to states
     // remove newline char
 
-    
-    
     state *init_state = create_state(0, 0, 0, tokens);
     states[0] = init_state;
     tm ->s = *init_state;
@@ -271,10 +270,47 @@ void parse_accept(char *line, turing_machine *tm, state *states[MAX_STATES]) {
     #if VISUALIZE_STATES
     visualize_states(states);
     #endif
+    num_states = idx;
 }
 
 
-void parse_line(char *line, turing_machine *tm, state *states[MAX_STATES]){
+
+void parse_transitions(char *line, turing_machine *tm, state *states[MAX_STATES]){
+    // parse transitions, add new states
+    int idx = num_states;
+
+    // check if state already exists in states
+
+
+    // if not create new state
+
+    // check if tape symbol already exists in alphabet
+
+    // if not create new symbol and add to alphabet
+
+    // add transition to transition function
+    ;
+
+}
+
+int check_if_intermediate_line(char *line) {
+    // check if line is first line of a transition specification
+    int has_comma;
+    int has_left_move;
+    int has_right_move;
+    int has_remain_move;
+    
+    if (cut_substring(line, ",") > -1) has_comma = TRUE;
+    if (cut_substring(line, ">") > -1) has_right_move = TRUE;
+    if (cut_substring(line, "<") > -1) has_left_move = TRUE;
+    if (cut_substring(line, "-") > -1) has_remain_move = TRUE;
+
+
+    return has_comma && !(has_left_move || has_right_move || has_remain_move);
+}
+
+
+int parse_line(char *line, turing_machine *tm, state *states[MAX_STATES]){
     // parse line and add info to turing machine
     fputs(line, stdout);
 
@@ -282,6 +318,7 @@ void parse_line(char *line, turing_machine *tm, state *states[MAX_STATES]){
     char *substrings[3] = {"input: ", "init: ", "accept: "};
     char *has_substring;
     int idx = 0;
+    int is_intermediate = FALSE;
 
     while (idx < 3) {
       // assume only one substring per line matching
@@ -309,21 +346,35 @@ void parse_line(char *line, turing_machine *tm, state *states[MAX_STATES]){
 	        parse_accept(has_substring, tm, states);
 		break;
 	    default:
-	      // neither of keywords found
-	      ;
-	      break;
+	        // neither of keywords found either newline or part of transition function
+	        is_intermediate = check_if_intermediate_line(line);
+	        break;
         }
     }
+    return is_intermediate;
 }
 
 
 void parse_file(FILE *fp, turing_machine *tm, state *states[MAX_STATES]){
     // parse file and create turing machine
     char line[MAX_LINE_LENGTH] = {0};
+    char *intermediate; // needed for transition parsing
+    int is_intermediate;
+
     // read lines
     while((fgets(line, MAX_LINE_LENGTH, fp)) != NULL){
-      parse_line(line, tm, states);
-    };
+        if ((is_intermediate = parse_line(line, tm, states)) == 1){
+	    // intermediate line, need to parse further 2 lines in a row
+	    intermediate = strdup(line); // copy line to intermediate
+	    fgets(line, MAX_LINE_LENGTH, fp); // read next line
+	    strcat(intermediate, line); // concatenate intermediate and line
+	    printf("intermediate: %s\n", intermediate);
+	    parse_transitions(intermediate, tm, states); // parse intermediate line
+        } else {
+	  ;
+	}
+
+    }
    
 }
 
