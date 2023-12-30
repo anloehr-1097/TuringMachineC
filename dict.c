@@ -4,25 +4,16 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
-#include <dict.h>
+#include "dict.h"
 
+#ifndef MAX_SIZE
 #define MAX_SIZE 1013
+#endif
+
+#ifndef ALPHABET_SIZE
 #define ALPHABET_SIZE 100
+#endif
 
-
-typedef struct key_value_pair {
-    char *key;
-    int key_length;
-    char *value;
-    int value_length;
-} kvp;
-
-
-// definition of dict
-typedef struct {
-    kvp *data[MAX_SIZE];  // pointer to array of kvp pointers
-    size_t item_count;
-} dict;
 
 
 // set dict array to null
@@ -119,26 +110,26 @@ kvp *look_up_dict(dict *d, kvp *item){
 }
 
 
-int main() {
-    dict *d = init_dict();
-    kvp *item = malloc(sizeof(kvp));
-    item->key = "hello";
-    item->key_length = 5;
-    item->value = "world";
-    item->value_length = 5;
-
-    kvp *item_2 = malloc(sizeof(kvp));
-    item_2->key = "this";
-    item_2->key_length = 4;
-    item_2->value = "string";
-    item_2->value_length = 6;
-
-    insert_dict(d, item);
-    insert_dict(d, item);
-    insert_dict(d, item_2);
-    print_dict(d);
-    look_up_dict(d, item);
-
-    return 0;
-}
+// int main() {
+// dict *d = init_dict();
+// kvp *item = malloc(sizeof(kvp));
+// item->key = "hello";
+// item->key_length = 5;
+// item->value = "world";
+// item->value_length = 5;
+// 
+// kvp *item_2 = malloc(sizeof(kvp));
+// item_2->key = "this";
+// item_2->key_length = 4;
+// item_2->value = "string";
+// item_2->value_length = 6;
+// 
+// insert_dict(d, item);
+// insert_dict(d, item);
+// insert_dict(d, item_2);
+// print_dict(d);
+// look_up_dict(d, item);
+// 
+// return 0;
+// }
 // TODO delete items from dict and recalculate hash values and reinsert items

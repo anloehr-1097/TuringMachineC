@@ -96,8 +96,8 @@ typedef struct {
 
 typedef struct transition_func {
   // transition dynamics
-
- 
+  dict *transitions;
+  size_t size;
 } transitions;
 
 typedef struct transition_inp {
@@ -134,7 +134,7 @@ char *find_substring(char *line, char *substring){
 
 
 int cut_substring(char *str, char *substr){
-  // return len to cut substring from string starting at index 0
+    // return len to cut substring from string starting at index 0
     char *has_substring = NULL;
     has_substring = strstr(str, substr);
 
@@ -274,24 +274,62 @@ void parse_accept(char *line, turing_machine *tm, state *states[MAX_STATES]) {
 }
 
 
+int search_state_in_states(char *state_name, state *states[MAX_STATES]){
+    // search for state in states
+    int i = 0;
+    while (states[i] != NULL){
+	if (strcmp(states[i]->desc, state_name) == 0){
+	    return i;
+	}
+	i++;
+    }
+        return -1;
+}
+
 
 void parse_transitions(char *line, turing_machine *tm, state *states[MAX_STATES]){
+    // receive concatenation of two transition lines corresponding to one transition
     // parse transitions, add new states
     int idx = num_states;
 
+    // get inp state
+    int first_comma = cut_substring(line, ",");
+    char *inp_state = (char *) malloc(sizeof(char) * first_comma);
+    strlcpy(inp_state, line, first_comma);
+
     // check if state already exists in states
-
-
-    // if not create new state
+    if (search_state_in_states(inp_state, states) == -1){
+        // state not existent yet, create new state
+        state *s = create_state(idx, 0, 0, inp_state);
+    }
 
     // check if tape symbol already exists in alphabet
-
+    // TODO later
     // if not create new symbol and add to alphabet
 
+    // determine key for transition
+    int inp_comb = cut_substring(line, "\n");
+    char *key = (char *) malloc(sizeof(char) * inp_comb);
+    strlcpy(key, line, inp_comb);
+
+    // determine value for transition
+    char *value = (char *) malloc(sizeof(char) * inp_comb);
+    strlcpy(value, line + inp_comb, strlen(line) - inp_comb + 1);
+     
+    kvp *item = (kvp *) malloc(sizeof(kvp));
+    item -> key = key;
+    item -> value = value;
+    item -> key_length = strlen(key);
+    item -> value_length = strlen(value);
+    printf("key: %s\n", item->key);
+    printf("value: %s\n", item->value);
+    insert_dict(tm->transfun.transitions, item);
+    print_dict(tm->transfun.transitions);
     // add transition to transition function
-    ;
+
 
 }
+
 
 int check_if_intermediate_line(char *line) {
     // check if line is first line of a transition specification
@@ -312,7 +350,9 @@ int check_if_intermediate_line(char *line) {
 
 int parse_line(char *line, turing_machine *tm, state *states[MAX_STATES]){
     // parse line and add info to turing machine
+    #if DEBUG
     fputs(line, stdout);
+    #endif
 
     // substrings to probe for 
     char *substrings[3] = {"input: ", "init: ", "accept: "};
@@ -382,11 +422,16 @@ void parse_file(FILE *fp, turing_machine *tm, state *states[MAX_STATES]){
 int main(int argc, char *argv[]){
   FILE *file = read_file("input.txtt");
   turing_machine *tm = malloc(sizeof(turing_machine));
+  tm ->transfun.transitions = init_dict();
   state *states[MAX_STATES] = {0};
 
 
-  parse_file(file, tm, states);
+  // parse_file(file, tm, states);
   //parse_input("input: 1,0,1,0,1,0,1,0,1,0,1,0,1,0", tm);
+  parse_transitions("q0,0\nq0,0,>", tm, states);
+  parse_transitions("q0,1\nq0,0,>", tm, states);
+  parse_transitions("q0,_\nqAccept,_,-", tm, states);
+
 
 
   // printf("Contains init: %s\n", find_substring("init: blablabalbal", "init: "));
