@@ -53,6 +53,7 @@ void print_dict(dict *d) {
     printf("index\tkey\tvalue\n");
     for (int i = 0; i < MAX_SIZE; i++) {
 	if (d->data[i] != NULL) {
+
 	    printf("%d\t%s\t%s\n", i, d->data[i]->key, d->data[i]->value);
 	}
     }

@@ -19,6 +19,7 @@
 #include "dict.h"
 #include "linked_list.h"
 
+
 #define MAX_ALPHABET_SIZE 100
 #define MAX_LINE_LENGTH 200
 #define TRUE 1
@@ -145,6 +146,23 @@ int cut_substring(char *str, char *substr){
     return -1;
   }
 
+
+int cut_one_of_substrings(char *str, char **substr, int num_substr){
+    // return len to cut substring from string starting at index 0
+    int idx = 0;
+    int len;
+
+    while (idx < num_substr){
+        len = cut_substring(str, substr[idx]);
+	if(len != -1){
+	  return len;
+	}
+	idx++;
+    }
+    return -1;
+  }
+
+
 node *create_symbol_node(symbol *s) {
 
     node *n = malloc(sizeof(node));
@@ -154,6 +172,7 @@ node *create_symbol_node(symbol *s) {
     n -> prev = NULL;
     return n;
 };
+
 
 void print_symbol(void *data) {
     // needed to print the linked list of symbols
@@ -313,18 +332,26 @@ void parse_transitions(char *line, turing_machine *tm, state *states[MAX_STATES]
     strlcpy(key, line, inp_comb);
 
     // determine value for transition
-    char *value = (char *) malloc(sizeof(char) * inp_comb);
-    strlcpy(value, line + inp_comb, strlen(line) - inp_comb + 1);
+    char *value = (char *) malloc(sizeof(char) * (strlen(line) - inp_comb + 1));
+
+    // find last comma
+    char *move_substring[3] = {">", "<", "-"};
+    int movement = cut_one_of_substrings(line, move_substring, 3);
+
+    // copy into value
+    strlcpy(value, line + inp_comb, movement + 1 - inp_comb);
      
     kvp *item = (kvp *) malloc(sizeof(kvp));
     item -> key = key;
     item -> value = value;
     item -> key_length = strlen(key);
     item -> value_length = strlen(value);
+    #if DEBUG
     printf("key: %s\n", item->key);
     printf("value: %s\n", item->value);
+    #endif
     insert_dict(tm->transfun.transitions, item);
-    print_dict(tm->transfun.transitions);
+    // print_dict(tm->transfun.transitions);
     // add transition to transition function
 
 
@@ -333,10 +360,10 @@ void parse_transitions(char *line, turing_machine *tm, state *states[MAX_STATES]
 
 int check_if_intermediate_line(char *line) {
     // check if line is first line of a transition specification
-    int has_comma;
-    int has_left_move;
-    int has_right_move;
-    int has_remain_move;
+    int has_comma = FALSE;
+    int has_left_move = FALSE;
+    int has_right_move = FALSE;
+    int has_remain_move = FALSE;
     
     if (cut_substring(line, ",") > -1) has_comma = TRUE;
     if (cut_substring(line, ">") > -1) has_right_move = TRUE;
@@ -385,12 +412,11 @@ int parse_line(char *line, turing_machine *tm, state *states[MAX_STATES]){
 		// 'accept' line
 	        parse_accept(has_substring, tm, states);
 		break;
-	    default:
-	        // neither of keywords found either newline or part of transition function
-	        is_intermediate = check_if_intermediate_line(line);
-	        break;
         }
+	return is_intermediate;
     }
+    // neither of keywords found either newline or part of transition function
+    is_intermediate = check_if_intermediate_line(line);
     return is_intermediate;
 }
 
@@ -410,9 +436,11 @@ void parse_file(FILE *fp, turing_machine *tm, state *states[MAX_STATES]){
 	    strcat(intermediate, line); // concatenate intermediate and line
 	    printf("intermediate: %s\n", intermediate);
 	    parse_transitions(intermediate, tm, states); // parse intermediate line
+	    free(intermediate);
         } else {
 	  ;
 	}
+
 
     }
    
@@ -426,19 +454,34 @@ int main(int argc, char *argv[]){
   state *states[MAX_STATES] = {0};
 
 
-  // parse_file(file, tm, states);
-  //parse_input("input: 1,0,1,0,1,0,1,0,1,0,1,0,1,0", tm);
-  parse_transitions("q0,0\nq0,0,>", tm, states);
-  parse_transitions("q0,1\nq0,0,>", tm, states);
-  parse_transitions("q0,_\nqAccept,_,-", tm, states);
+  parse_file(file, tm, states);
+  print_dict(tm->transfun.transitions);
+  // parse_input("input: 1,0,1,0,1,0,1,0,1,0,1,0,1,0", tm);
+  // parse_transitions("q0,0\nq0,0,>", tm, states);
+  // parse_transitions("q0,1\nq0,0,>", tm, states);
+  // parse_transitions("q0,_\nqAccept,_,-", tm, states);
 
-
+  // check_if_intermediate_line("q0,0\n");
+  //  
+  // printf("Testing function 'check_if_intermediate_line' from sim_turing.c.\n");
+  // char *line_success = "q0, 0\n";
+  // char *line_failure_1= "\n";
+  // char *line_failure_2= "q0, 0,>\n";
+  // char *line_failure_3= "q1, 4anbsw,>\n";
+  //  
+  // assert(check_if_intermediate_line(line_success) == 1);
+  // assert(check_if_intermediate_line(line_failure_1) == 0);
+  // assert(check_if_intermediate_line(line_failure_2) == 0);
+  // assert(check_if_intermediate_line(line_failure_3) == 0);
+  // 
+  // 
 
   // printf("Contains init: %s\n", find_substring("init: blablabalbal", "init: "));
   // printf("Contains input: %s\n", find_substring("input: blablabalbal", "input: "));
   // printf("Contains input: %s\n", find_substring("init: blablabalbal", "input: "));
   // printf("Contains init: %s\n", find_substring("input: blablabalbal", "init: "));
   return 0;
+
 
 
 }
