@@ -51,6 +51,7 @@ state *create_state(int idx, int is_accepting, int is_rejecting, char *desc){
 
 }
 
+
 void visualize_states(state** states) {
     // print states
     int i = 0;
@@ -62,7 +63,7 @@ void visualize_states(state** states) {
 }
 
 void free_state(state *s){
-	free(s);
+    free(s);
 }
 
 
@@ -87,12 +88,38 @@ void free_symbol(symbol *s){
 }
 
 
+typedef struct {
+    state *s;
+    symbol *sym;
+    char mov[1];
+} state_symbol_mov_pair;
+
 
 typedef struct {
   // alphabet of the tape with unqiue symbols
   symbol *symbols[MAX_ALPHABET_SIZE];
   size_t size;
 } alphabet;
+
+
+alphabet *create_alphabet(){
+    alphabet *a = malloc(sizeof(alphabet));
+    a -> size = 0;
+    return a;
+}
+
+
+int search_in_alphabet(char *symbol_name, alphabet a){
+    // search for symbol in alphabet
+    int i = 0;
+    while (a.symbols[i] != NULL){
+	if (strcmp(a.symbols[i]->desc, symbol_name) == 0){
+	    return i;
+	}
+	i++;
+    }
+    return -1;
+}
 
 
 typedef struct transition_func {
@@ -446,16 +473,105 @@ void parse_file(FILE *fp, turing_machine *tm, state *states[MAX_STATES]){
    
 }
 
+void split_string_to_state_symbol_mov_pair(char *str, int str_len,
+                                       state *states[MAX_STATES],
+                                       state_symbol_mov_pair *pair,
+				       turing_machine *tm)
+    {
+         // given string, return state symbol pair
+	int comma_idx = cut_substring(str, ",");
+
+	char *state_name = (char *) malloc(sizeof(char) * comma_idx);
+	strlcpy(state_name, str, comma_idx);
+
+	// TODO the following should actually go into the parsing part of the program
+	// check if state already exists in states
+	int state_idx = search_state_in_states(state_name, states);
+
+	if (state_idx == -1){
+	    // state not existent yet, create new state
+	    state *s = create_state(num_states, 0, 0, state_name);
+	    num_states++;
+	    states[num_states] = s;
+	    pair->s = s;
+	} else {
+	    pair->s = states[state_idx];
+	}
+
+	// symbol is second part until next comma
+	int next_comma_idx = cut_substring(str + comma_idx + 1, ",");
+	char *symbol_name = (char *) malloc(sizeof(char) * next_comma_idx);
+	strlcpy(symbol_name, str + comma_idx + 1, next_comma_idx);
+
+	int symbol_idx = search_in_alphabet(symbol_name, tm->a);
+
+	if (symbol_idx == -1){
+	    // symbol not existent yet, create new state
+	    symbol *symb = create_symbol(tm->a.size, symbol_name);
+	    tm->a.symbols[tm->a.size] = symb;
+	    tm->a.size++;
+	    pair->sym = symb;
+	} else {
+	    pair->sym = tm->a.symbols[symbol_idx];
+	}
+
+
+	// movement is third part, right after 3rd comma
+	pair -> mov[0] = str[comma_idx + next_comma_idx + 2];
+}
+
+
+state *extract_state_from_str(char *str, int str_len, state *states[MAX_STATES]) {
+    // given a string as found in key-value pair, extract state
+    // state is first part until comma
+    int comma_idx = cut_substring(str, ",");
+
+    char *state_name = (char *) malloc(sizeof(char) * comma_idx);
+    strlcpy(state_name, str, comma_idx);
+
+
+    // TODO the following should actually go into the parsing part of the program
+    // check if state already exists in states
+    int state_idx = search_state_in_states(state_name, states);
+   
+    if (state_idx == -1){
+      	// state not existent yet, create new state
+	state *s = create_state(num_states, 0, 0, state_name);
+	num_states++;
+	states[num_states] = s;
+	return s;
+    } else {
+        return states[state_idx];
+    }
+}
+
+void extract_symbol_from_str(char *str, int str_len) {
+    // given a string as found in key-value pair, extract symbol
+
+}
+
+
+void extract_movement_from_str(char *str, int str_len) {
+    // given a string as found in key-value pair, extract movement
+
+}
+
 
 int main(int argc, char *argv[]){
   FILE *file = read_file("input.txtt");
   turing_machine *tm = malloc(sizeof(turing_machine));
+  alphabet *a = create_alphabet();
   tm ->transfun.transitions = init_dict();
+  tm ->a = *a;
+
   state *states[MAX_STATES] = {0};
 
 
   parse_file(file, tm, states);
   print_dict(tm->transfun.transitions);
+  state_symbol_mov_pair *pair = malloc(sizeof(state_symbol_mov_pair));
+  
+  split_string_to_state_symbol_mov_pair("q0,0,>", 6, states, pair, tm);
   // parse_input("input: 1,0,1,0,1,0,1,0,1,0,1,0,1,0", tm);
   // parse_transitions("q0,0\nq0,0,>", tm, states);
   // parse_transitions("q0,1\nq0,0,>", tm, states);
