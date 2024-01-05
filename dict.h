@@ -29,4 +29,4 @@ size_t item_count;
 dict *init_dict();
 void print_dict(dict *);
 int insert_dict(dict *, kvp *);
-kvp * look_up_dict(dict *, kvp *);
+kvp * look_up_dict(dict *, char *);

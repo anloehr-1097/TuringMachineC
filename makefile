@@ -3,11 +3,11 @@
 CC = clang 
 
 # Compiler flags
-CFLAGS = -Wall -Werror -lm
+CFLAGS = -Wall -Werror -g
 
 # Source files
 # SRC_FILES = sim_turing.c linked_list.c dict.c 
-SRC_FILES = sim_turing.c linked_list.c 
+SRC_FILES = sim_turing.c linked_list.c dict.c 
 
 # Object files
 OBJ_FILES = $(SRC_FILES:.c=.o)

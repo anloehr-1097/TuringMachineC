@@ -4,9 +4,7 @@
   The input file is a text file.
   - Each symbol has a description as well as an index which makes the implementation of the transition function easier.
   - The alphabet is a list of unique symbols.
-  - The input is a list of symbols from the alphabet.
-  - each state has an index, two booleans (accepting and rejecting) and a description.
-  - the tape is a list of letters from the alphabet implemented as a doubly linked list and the current position is a pointer to the current letter.
+  - The input is a list of symbols frt letter.
 
   
 */
@@ -25,7 +23,7 @@
 #define TRUE 1
 #define FALSE 0
 #define MAX_STATES 100
-#define VISUALIZE_TAPE 0 
+#define VISUALIZE_TAPE 1 
 #define VISUALIZE_STATES 1 
 #define DEBUG 0 
 int num_states = 0;
@@ -91,22 +89,20 @@ void free_symbol(symbol *s){
 typedef struct {
     state *s;
     symbol *sym;
-    char mov[1];
+    char mov;
 } state_symbol_mov_pair;
 
+void print_ssm_pair(state_symbol_mov_pair *pair) {
+    printf("State: %s\n", pair->s->desc);
+    printf("Symbol: %s\n", pair->sym->desc);
+    printf("Movement: %c\n", pair->mov);
+}
 
 typedef struct {
   // alphabet of the tape with unqiue symbols
   symbol *symbols[MAX_ALPHABET_SIZE];
   size_t size;
 } alphabet;
-
-
-alphabet *create_alphabet(){
-    alphabet *a = malloc(sizeof(alphabet));
-    a -> size = 0;
-    return a;
-}
 
 
 int search_in_alphabet(char *symbol_name, alphabet a){
@@ -347,16 +343,22 @@ void parse_transitions(char *line, turing_machine *tm, state *states[MAX_STATES]
     if (search_state_in_states(inp_state, states) == -1){
         // state not existent yet, create new state
         state *s = create_state(idx, 0, 0, inp_state);
+        states[idx] = s;
+	num_states ++;
     }
-
-    // check if tape symbol already exists in alphabet
-    // TODO later
-    // if not create new symbol and add to alphabet
 
     // determine key for transition
     int inp_comb = cut_substring(line, "\n");
     char *key = (char *) malloc(sizeof(char) * inp_comb);
     strlcpy(key, line, inp_comb);
+    // check if tape symbol already exists in alphabet
+    // if not create new symbol and add to alphabet
+    if (search_in_alphabet(key, tm->a) == -1){
+	// symbol not existent yet, create new state
+	symbol *symb = create_symbol(tm->a.size, key);
+	tm->a.symbols[tm->a.size] = symb;
+	tm->a.size++;
+    }
 
     // determine value for transition
     char *value = (char *) malloc(sizeof(char) * (strlen(line) - inp_comb + 1));
@@ -380,8 +382,6 @@ void parse_transitions(char *line, turing_machine *tm, state *states[MAX_STATES]
     insert_dict(tm->transfun.transitions, item);
     // print_dict(tm->transfun.transitions);
     // add transition to transition function
-
-
 }
 
 
@@ -499,9 +499,9 @@ void split_string_to_state_symbol_mov_pair(char *str, int str_len,
 	}
 
 	// symbol is second part until next comma
-	int next_comma_idx = cut_substring(str + comma_idx + 1, ",");
+	int next_comma_idx = cut_substring(str + comma_idx, ",");
 	char *symbol_name = (char *) malloc(sizeof(char) * next_comma_idx);
-	strlcpy(symbol_name, str + comma_idx + 1, next_comma_idx);
+	strlcpy(symbol_name, str + comma_idx, next_comma_idx);
 
 	int symbol_idx = search_in_alphabet(symbol_name, tm->a);
 
@@ -517,7 +517,8 @@ void split_string_to_state_symbol_mov_pair(char *str, int str_len,
 
 
 	// movement is third part, right after 3rd comma
-	pair -> mov[0] = str[comma_idx + next_comma_idx + 2];
+	// pair -> mov = str[comma_idx + next_comma_idx + 1];
+	pair -> mov = str[str_len - 1];
 }
 
 
@@ -545,33 +546,89 @@ state *extract_state_from_str(char *str, int str_len, state *states[MAX_STATES])
     }
 }
 
-void extract_symbol_from_str(char *str, int str_len) {
-    // given a string as found in key-value pair, extract symbol
 
+void simulate_turing_machine(turing_machine *tm, state *states[MAX_STATES]) {
+    // simulate turing machine
+    // only stop if accept or reject state reached  
+    // reject states are all the states not in the transition function
+
+    state *current_state;
+    symbol *current_symbol = tm->tape.current->data;
+    char current_state_symb[100] = "";
+    state_symbol_mov_pair pair;
+    print_symbol(current_symbol);
+
+    printf("Simulating turing machine.\n");
+    printf("Visualizing tape.\n");
+    visualize_tape(tm);
+
+    while (TRUE) {
+      	// get current state and symbol
+        
+        memset(current_state_symb, 0, sizeof(current_state_symb));
+
+        current_state = &(tm->s);
+	current_symbol = tm->tape.current->data;
+	strncat(current_state_symb, current_state -> desc, strlen(current_state -> desc));
+	strcat(current_state_symb, ",");
+	strcat(current_state_symb, current_symbol->desc);
+	// get transition from transition function
+	kvp *transition = look_up_dict(tm->transfun.transitions, current_state_symb);
+	if (transition == NULL) {
+	    // no transition found, reject
+	    printf("No transition found, reject.\n");
+	    break;
+        }
+	// split transition into state, symbol, movement
+	split_string_to_state_symbol_mov_pair(transition->value, transition->value_length, states, &pair, tm);
+	// update tape
+	tm->tape.current->data = pair.sym;
+	// update stat
+	tm->s = *pair.s;
+	// move tape
+	if (pair.mov == '>') {
+	    tm->tape.current = tm->tape.current->next;
+	} else if (pair.mov == '<') {
+	    tm->tape.current = tm->tape.current->prev;
+	} else {
+	    // remain
+	    ;
+        }
+	// check if accept or reject state
+	if (tm->s.is_accepting == 1) {
+	    printf("Accept.\n");
+	    break;
+	}
+
+    }
+    // print tape
+    printf("Visualizing tape.\n");
+    visualize_tape(tm);
 }
-
-
-void extract_movement_from_str(char *str, int str_len) {
-    // given a string as found in key-value pair, extract movement
-
-}
-
 
 int main(int argc, char *argv[]){
-  FILE *file = read_file("input.txtt");
+  // FILE *file = read_file("input.txtt");
+  FILE *file = read_file("input_2.txt");
   turing_machine *tm = malloc(sizeof(turing_machine));
-  alphabet *a = create_alphabet();
   tm ->transfun.transitions = init_dict();
-  tm ->a = *a;
-
   state *states[MAX_STATES] = {0};
 
 
   parse_file(file, tm, states);
   print_dict(tm->transfun.transitions);
-  state_symbol_mov_pair *pair = malloc(sizeof(state_symbol_mov_pair));
-  
-  split_string_to_state_symbol_mov_pair("q0,0,>", 6, states, pair, tm);
+  state_symbol_mov_pair pair ;
+  print_ssm_pair(&pair);
+
+
+  // split_string_to_state_symbol_mov_pair("q0,1,>\0", strlen("q0,1,>\0"), states, &pair, tm);
+  split_string_to_state_symbol_mov_pair("q0,1wer,-\0", strlen("q0,1wer,-\0"), states, &pair, tm);
+
+  // symbol *s = tm -> tape.current -> data;
+  // print_symbol(s);
+  simulate_turing_machine(tm, states);
+
+  //  print_ssm_pair(&pair);
+
   // parse_input("input: 1,0,1,0,1,0,1,0,1,0,1,0,1,0", tm);
   // parse_transitions("q0,0\nq0,0,>", tm, states);
   // parse_transitions("q0,1\nq0,0,>", tm, states);

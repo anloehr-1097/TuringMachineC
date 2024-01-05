@@ -63,7 +63,7 @@ void print_dict(dict *d) {
 // insert item into dict with linear probing
 int insert_dict(dict* d, kvp *item) {
     // check if element already in dict
-    if (look_up_dict(d, item) != NULL) {
+    if (look_up_dict(d, item->key) != NULL) {
   	printf("item already in dict\n");
     return -1;
     }
@@ -92,14 +92,14 @@ int insert_dict(dict* d, kvp *item) {
 
 
 // retrieve item from dict in a linear probing fashion
-kvp *look_up_dict(dict *d, kvp *item){
-  int hash = hash_function(item->key);
+kvp *look_up_dict(dict *d, char*key){
+  int hash = hash_function(key);
   int i = hash;
   
   while (d->data[i] != NULL){
     // for as long as no empty slot encountered search for item
     // i.e. we use lineare provbing
-    if (strcmp(d->data[i]->key, item->key) == 0){
+    if (strcmp(d->data[i]->key, key) == 0){
 	// found item in dict
       printf("item found.\n%d\t%s\t%s", i, d->data[i]->key, d->data[i]->value);
 	return d->data[i];

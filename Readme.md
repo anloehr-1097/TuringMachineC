@@ -45,5 +45,8 @@ The UTM is supposed to halt, either if an accepting state is entered or if the i
 # State of the project
 In the midst of parsing the input and building the appropriate data structures for the UTM.
 ## Next steps: 
-- parse and create the transition function using a dictionary / hash table.
 - build the alphabet. (integrate into function parsing the input)
+- build the state list
+- test parser of value for key value pair
+- write simulator
+
