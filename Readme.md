@@ -26,17 +26,26 @@ The next line is empty and followed by the next input to the transition function
 ## Example input
 ---------------------------
 input: 1,0,0,1,0,1,0,1
+
 init: q0
+
 accept: qAccept
 
+
 q0,0
+
 q0,0,>
+
 
 q0,1
+
 q0,0,>
 
+
 q0,_
+
 qAccept,_,-
+
 
 ---------------------------
 Describes a turing machine with input tape '10010101' flipping each bit to 0.
