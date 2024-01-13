@@ -1,0 +1,12 @@
+input: 1,0,0,1,1,1,0,1,0,0,1,1,1,0
+init: q0
+accept: qAccept
+
+q0,0
+q0,0,>
+
+q0,1
+q0,0,>
+
+q0,_
+qAccept,_,-

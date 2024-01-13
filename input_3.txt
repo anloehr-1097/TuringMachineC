@@ -1,0 +1,21 @@
+input: W,E,L,T,!
+init: q0
+accept: qAccept
+
+q0,W
+q1,W,<
+
+q1,_
+q2,O,<
+
+q2,_
+q3,L,<
+
+q3,_
+q4,L,<
+
+q4,_
+q5,A,<
+
+q5,_
+qAccept,H,<
