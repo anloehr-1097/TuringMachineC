@@ -24,31 +24,8 @@ The next line is empty and followed by the next input to the transition function
 
 
 ## Example input
----------------------------
-input: 1,0,0,1,0,1,0,1
-
-init: q0
-
-accept: qAccept
-
-
-q0,0
-
-q0,0,>
-
-
-q0,1
-
-q0,0,>
-
-
-q0,_
-
-qAccept,_,-
-
-
----------------------------
-Describes a turing machine with input tape '10010101' flipping each bit to 0.
+As an example, one may take a look at input_2.txt.
+The specification yields a Turing machine printing 'ALGO2' to its tape.
 
 ## Output
 The output yields the simulation of the turing machine on the provided input. The UTM is supposed to yield the state of the tape when terminating, separated by ','. 
