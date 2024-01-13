@@ -1,7 +1,10 @@
 
 # What is this about? 
-This is an implementation of a universal turing machine (UTM) which accepts as an input another turing machine specified in a given format and yields as an output the result when simulating the other turing machine.
+This is an implementation of a universal turing machine (UTM) which accepts as an input another turing machine specified in a given format and yields as anoutput the result when simulating the other turing machine.
 The turing machine provided to the universal turing machine is provided as a text file with a structure as specified below in the 'Input' section.
+
+This is one of my first C projects which I 'completed'. It is more of a prototype which I may refactor and clean in the future if I ever feel the urge to do so.
+
 
 ## Input
 ### Initial tape of the turing machine
@@ -43,10 +46,13 @@ The UTM is supposed to halt, either if an accepting state is entered or if the i
 
 
 # State of the project
-In the midst of parsing the input and building the appropriate data structures for the UTM.
-## Next steps: 
-- build the alphabet. (integrate into function parsing the input)
-- build the state list
-- test parser of value for key value pair
-- write simulator
+The simulation is working on 3 examples provided in the repository as __input_i.txt__.
 
+## Next steps: 
+- refactoring and cleaning the code
+- validating correctness on more examples
+
+
+# How to use?
+If anyone wants to use / be inspired by this program, one can simply clone the repository, modify the __main.c__ file to simulate one of the provided (or a custom) inputs and then run make to build the project.
+No dependencies except for the C standard library are used.
