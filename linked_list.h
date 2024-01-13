@@ -29,6 +29,7 @@ linked_list *create_linked_list();
 void free_linked_list(linked_list *l);
 
 void add_node(linked_list *l, node *n);
+void add_node_to_front(linked_list *l, node *n);
 
 void remove_node(linked_list *l, node *n);
 

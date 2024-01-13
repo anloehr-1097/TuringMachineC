@@ -51,6 +51,21 @@ void add_node(linked_list *l, node *n){
      l -> size++;
 }
 
+
+
+void add_node_to_front(linked_list *l, node *n){
+    if(l -> head == NULL){
+	l -> head = n;
+	l -> tail = n;
+	l -> current = n;
+    } else {
+	l -> head -> prev = n;
+	n -> next = l -> head;
+	l -> head = n;
+     }
+     l -> size++;
+}
+
 void remove_node(linked_list *l, node *n){
     if(n -> prev == NULL){
 	l -> head = n -> next;

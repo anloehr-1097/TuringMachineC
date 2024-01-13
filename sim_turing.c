@@ -23,8 +23,8 @@
 #define TRUE 1
 #define FALSE 0
 #define MAX_STATES 100
-#define VISUALIZE_TAPE 1 
-#define VISUALIZE_STATES 1 
+#define VISUALIZE_TAPE 0 
+#define VISUALIZE_STATES 0
 #define DEBUG 0 
 int num_states = 0;
 
@@ -211,7 +211,6 @@ void visualize_tape(turing_machine *tm) {
 
 
 void parse_input(char *line, turing_machine *tm) {
-    // TODO add new input characters to alphabet
     char *first_token = line + strlen("input: "); 
     char tokens[strlen(line)] ;
 
@@ -247,9 +246,19 @@ void parse_input(char *line, turing_machine *tm) {
     }
 
     // last letter remaining in tokens, need to parse
-    current_symb = create_symbol(idx, tokens);
+    // printf("Tokens at last iter: %s", tokens);
+    len = cut_substring(tokens, "\n");
+    strlcpy(substring, tokens, len);
+    current_symb = create_symbol(idx, strdup(substring));
+    idx++;
     n = create_node(current_symb); 
     add_node(&tm->tape, n);
+
+    // add node for tape end
+    current_symb = create_symbol(idx, "_");
+    n = create_node(current_symb);
+    add_node(&tm->tape, n);
+    
     #if VISUALIZE_TAPE 
     visualize_tape(tm);
     #endif
@@ -461,7 +470,7 @@ void parse_file(FILE *fp, turing_machine *tm, state *states[MAX_STATES]){
 	    intermediate = strdup(line); // copy line to intermediate
 	    fgets(line, MAX_LINE_LENGTH, fp); // read next line
 	    strcat(intermediate, line); // concatenate intermediate and line
-	    printf("intermediate: %s\n", intermediate);
+	    // printf("intermediate: %s\n", intermediate);
 	    parse_transitions(intermediate, tm, states); // parse intermediate line
 	    free(intermediate);
         } else {
@@ -558,7 +567,7 @@ void simulate_turing_machine(turing_machine *tm, state *states[MAX_STATES]) {
     state_symbol_mov_pair pair;
     print_symbol(current_symbol);
 
-    printf("Simulating turing machine.\n");
+    // printf("Simulating turing machine.\n");
     printf("Visualizing tape.\n");
     visualize_tape(tm);
 
@@ -588,8 +597,22 @@ void simulate_turing_machine(turing_machine *tm, state *states[MAX_STATES]) {
 	// move tape
 	if (pair.mov == '>') {
 	    tm->tape.current = tm->tape.current->next;
+	    if (tm->tape.current == NULL) {
+	        // reached end of tape, add new symbol
+	        symbol *s = create_symbol(tm->tape.size, "_");
+	        node *n = create_symbol_node(s);
+	        add_node(&tm->tape, n);
+	        tm->tape.current = tm->tape.tail;
+	    }
 	} else if (pair.mov == '<') {
 	    tm->tape.current = tm->tape.current->prev;
+	    if (tm->tape.current == NULL) {
+	        // reached beginning of tape, add new symbol to front
+	        symbol *s = create_symbol(tm->tape.size, "_");
+	        node *n = create_symbol_node(s);
+	        add_node_to_front(&tm->tape, n);
+	        tm->tape.current = tm->tape.head;
+	    }
 	} else {
 	    // remain
 	    ;
@@ -599,7 +622,6 @@ void simulate_turing_machine(turing_machine *tm, state *states[MAX_STATES]) {
 	    printf("Accept.\n");
 	    break;
 	}
-
     }
     // print tape
     printf("Visualizing tape.\n");
@@ -608,20 +630,21 @@ void simulate_turing_machine(turing_machine *tm, state *states[MAX_STATES]) {
 
 int main(int argc, char *argv[]){
   // FILE *file = read_file("input.txtt");
-  FILE *file = read_file("input_2.txt");
+  // FILE *file = read_file("input_2.txt");
+  FILE *file = read_file("input_3.txt");
   turing_machine *tm = malloc(sizeof(turing_machine));
   tm ->transfun.transitions = init_dict();
   state *states[MAX_STATES] = {0};
 
 
   parse_file(file, tm, states);
-  print_dict(tm->transfun.transitions);
-  state_symbol_mov_pair pair ;
-  print_ssm_pair(&pair);
+  // print_dict(tm->transfun.transitions);
+  // state_symbol_mov_pair pair ;
+  // print_ssm_pair(&pair);
 
 
   // split_string_to_state_symbol_mov_pair("q0,1,>\0", strlen("q0,1,>\0"), states, &pair, tm);
-  split_string_to_state_symbol_mov_pair("q0,1wer,-\0", strlen("q0,1wer,-\0"), states, &pair, tm);
+  // split_string_to_state_symbol_mov_pair("q0,1wer,-\0", strlen("q0,1wer,-\0"), states, &pair, tm);
 
   // symbol *s = tm -> tape.current -> data;
   // print_symbol(s);
@@ -629,7 +652,7 @@ int main(int argc, char *argv[]){
 
   //  print_ssm_pair(&pair);
 
-  // parse_input("input: 1,0,1,0,1,0,1,0,1,0,1,0,1,0", tm);
+  // parse_input("input: 1,0,1,0,1,0,1,0,1,0,1,0,1,0\n", tm);
   // parse_transitions("q0,0\nq0,0,>", tm, states);
   // parse_transitions("q0,1\nq0,0,>", tm, states);
   // parse_transitions("q0,_\nqAccept,_,-", tm, states);

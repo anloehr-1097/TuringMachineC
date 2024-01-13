@@ -70,22 +70,22 @@ int insert_dict(dict* d, kvp *item) {
   
     // insert item
     int hash = hash_function(item->key);
-    printf("hash: %d\n", hash);
+    //printf("hash: %d\n", hash);
     int number_of_trials = 0;  // keep track when to abbort insertion
     int i = hash; // index to insert item at
 
     while (d->data[i] != NULL && number_of_trials < MAX_SIZE) {
-	printf("collision\n");
+      // printf("collision\n");
 	i = (i + 1) % MAX_SIZE;
 	number_of_trials++;
     }
 
     if (number_of_trials == MAX_SIZE) {
-      	printf("dict full\n");
+      // printf("dict full\n");
 	return -1;
     }
     d->data[i] = item;
-    printf("inserted @ %d\n", i);
+    // printf("inserted @ %d\n", i);
     d->item_count++;
     return 0;
 } 
@@ -101,7 +101,7 @@ kvp *look_up_dict(dict *d, char*key){
     // i.e. we use lineare provbing
     if (strcmp(d->data[i]->key, key) == 0){
 	// found item in dict
-      printf("item found.\n%d\t%s\t%s", i, d->data[i]->key, d->data[i]->value);
+        // printf("item found.\n%d\t%s\t%s", i, d->data[i]->key, d->data[i]->value);
 	return d->data[i];
 	}
     // not found, continue search in adjacent slots 
